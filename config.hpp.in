@@ -1,0 +1,1 @@
+#cmakedefine OPENCV_PATH "@OPENCV_PATH@"
