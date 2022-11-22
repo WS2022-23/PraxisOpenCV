@@ -8,6 +8,7 @@ find_package( OpenCV REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 
 set(OPENCV_PATH ${OpenCV_DIR} )
+set(SRC_PATH ${CMAKE_SOURCE_DIR})
 configure_file(config.hpp.in config.hpp)
 
 add_executable(BiVaPraktikum main.cpp)
