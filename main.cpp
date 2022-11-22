@@ -1,8 +1,39 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <config.hpp>
+#include "stdio.h"
+
+#define WindowName "Test"
+
 using namespace cv;
 using namespace std;
+
+
+
+void resizeImage(Mat& image) {
+    try
+    {
+        Rect sizes = getWindowImageRect(WindowName);
+
+        int a = (sizes.width * 1.0f / (sizes.height));
+        if ((16.0f/9) != a)
+        {
+            int temp = (16 * 1.0f / 9) * sizes.height;
+            resizeWindow(WindowName, Size(temp, sizes.height));
+        }
+
+        float ratioHeight = (sizes.height) / (image.size().height * 1.0f);
+        float ratioWidth = (sizes.width) / (image.size().width * 1.0f);
+
+        resize(image, image, Size(), ratioWidth, ratioHeight);
+    }
+    catch (const std::exception&)
+    {
+        //exit(-69);
+    }
+
+
+}
 
 int main(int, char**) {
 
@@ -14,13 +45,18 @@ int main(int, char**) {
     Mat image;
     Mat imageGray;
     std::vector<Rect> faces;
-    namedWindow("Meine Kamera", WINDOW_AUTOSIZE);
+    namedWindow(WindowName, cv::WINDOW_NORMAL);
     VideoCapture cap(0);
+
+    cap.set(CAP_PROP_FRAME_WIDTH, 1280);
+    cap.set(CAP_PROP_FRAME_HEIGHT, 720);
+
     if (!cap.isOpened())
     {
         std::cout << "Die Kamera ist geschlossen!!!";
     }
-    while (true)
+    bool running = true;
+    while (running)
     {
         cap >> image;
 
@@ -37,8 +73,16 @@ int main(int, char**) {
         {
             rectangle(image, face, Scalar(0, 255, 0, 255), 2);
         }
-        imshow("Display window", image);
-        waitKey(25);
+
+        resizeImage(image);
+        
+        imshow(WindowName, image);
+        
+
+        char key = waitKey(70);
+        if (key == 27) 
+            break;
+        running = getWindowProperty(WindowName, WND_PROP_VISIBLE) > 0;
     }
     return 0;
 }
