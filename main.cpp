@@ -2,41 +2,38 @@
 #include <opencv2/opencv.hpp>
 #include <config.hpp>
 #include "stdio.h"
+#include <chrono>
 
 #define WindowName "Test"
 
 using namespace cv;
 using namespace std;
+using namespace std::chrono;
 
 
 
 void resizeImage(Mat& image) {
-    try
+
+    Rect windowSizes = getWindowImageRect(WindowName);
+
+    int newSize = (windowSizes.width * 1.0f / (windowSizes.height));
+    if ((16.0f/9) != newSize)
     {
-        Rect sizes = getWindowImageRect(WindowName);
-
-        int a = (sizes.width * 1.0f / (sizes.height));
-        if ((16.0f/9) != a)
-        {
-            int temp = (16 * 1.0f / 9) * sizes.height;
-            resizeWindow(WindowName, Size(temp, sizes.height));
-        }
-
-        float ratioHeight = (sizes.height) / (image.size().height * 1.0f);
-        float ratioWidth = (sizes.width) / (image.size().width * 1.0f);
-
-        resize(image, image, Size(), ratioWidth, ratioHeight);
-    }
-    catch (const std::exception&)
-    {
-        //exit(-69);
+        int temp = (16 * 1.0f / 9) * windowSizes.height;
+        resizeWindow(WindowName, Size(temp, windowSizes.height));
     }
 
+    float ratioHeight = (windowSizes.height) / (image.size().height * 1.0f);
+    float ratioWidth = (windowSizes.width) / (image.size().width * 1.0f);
 
+    resize(image, image, Size(), ratioWidth, ratioHeight);
 }
 
 int main(int, char**) {
-
+    
+    time_point<steady_clock> begin_time = steady_clock::now(), new_time;
+    size_t frame_counter = 0;
+    size_t fps = 0;
     string openCvPath = OPENCV_PATH;
     openCvPath = openCvPath.substr(0, openCvPath.length() - 12);
     string cascPath = openCvPath+ "\\etc\\lbpcascades\\lbpcascade_frontalface_improved.xml";
@@ -74,15 +71,26 @@ int main(int, char**) {
             rectangle(image, face, Scalar(0, 255, 0, 255), 2);
         }
 
-        resizeImage(image);
-        
+        frame_counter++;
+        new_time = steady_clock::now();
+        if (new_time - begin_time >= seconds{ 1 }) {  
+            fps = frame_counter;
+            frame_counter = 0;
+            begin_time = new_time;
+        }
+        putText(image, to_string(fps), Point(30, 30), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0, 255), 2, LINE_AA);
+
         imshow(WindowName, image);
         
 
-        char key = waitKey(70);
+        char key = waitKey(1);
         if (key == 27) 
             break;
         running = getWindowProperty(WindowName, WND_PROP_VISIBLE) > 0;
+        if (running)
+        {
+            resizeImage(image);
+        }
     }
     return 0;
 }
