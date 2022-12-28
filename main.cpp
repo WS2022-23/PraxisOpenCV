@@ -79,12 +79,15 @@ int main(int, char**) {
     openCvPath = openCvPath.substr(0, openCvPath.length() - 12);
     string cascPath = openCvPath+ "\\etc\\lbpcascades\\lbpcascade_frontalface_improved.xml";
     string eyeCascPath = openCvPath + "\\etc\\haarcascades\\haarcascade_eye.xml";
+    string mouthCascPath = SRC_PATH"\\haarcascades\\haarcascade_mcs_mouth.xml";
 
     auto faceCascade = CascadeClassifier(cascPath);
     auto eyeCascade = CascadeClassifier(eyeCascPath);
+    auto mouthCascade = CascadeClassifier(mouthCascPath);
     Mat image;
     Mat origImage;
-    Mat dealWithIt = imread(SRC_PATH"\\Thug-Life-Sunglasses-PNG.png",IMREAD_UNCHANGED);
+    Mat dealWithIt = imread(SRC_PATH"\\pictures\\Thug-Life-Sunglasses-PNG.png",IMREAD_UNCHANGED);
+    Mat jonny = imread(SRC_PATH"\\pictures\\joint.png", IMREAD_UNCHANGED);
     Mat imageGray;
     std::vector<Rect> faces;
     namedWindow(WindowName, cv::WINDOW_NORMAL);
@@ -119,6 +122,7 @@ int main(int, char**) {
             rectangle(image, face, Scalar(0, 255, 0, 255), 2);
             Mat faceRoi = image(face);
             vector<Rect> eyes;
+            vector<Rect> mouth;
 
             eyeCascade.detectMultiScale(
                 faceRoi,
@@ -127,6 +131,15 @@ int main(int, char**) {
                 0 | CASCADE_SCALE_IMAGE,
                 Size(5, 5)
             );
+
+            mouthCascade.detectMultiScale(
+                faceRoi,
+                mouth,
+                1.1, 2,
+                0 | CASCADE_SCALE_IMAGE,
+                Size(5, 5)
+            );
+
             if (eyes.size() >= 2) {
                 overlay = Point(face.x + (eyes[0].x + eyes[1].x) / 2.0 + eyes[0].width * 0.5, face.y + (eyes[0].y + eyes[1].y) / 2.0 + eyes[0].height * 0.5);
                 Rect roi(overlay.x, overlay.y, face.width, face.height);
@@ -137,6 +150,11 @@ int main(int, char**) {
                     int radius = cvRound((eyes[i].width + eyes[i].height) * 0.25);
                     circle(image, center, radius, Scalar(255, 0, 0), 1, 8, 0);
                 }
+            }
+            if (mouth.size() >= 1) {
+                overlay = Point(face.x + (mouth[0].x) / 2.0 + 192, face.y + (mouth[0].y) / 2.0 + 192);
+                Rect roi(overlay.x, overlay.y, face.width, face.height);
+                image = overlayPNG(image, jonny, roi, true);
             }
         }
 
