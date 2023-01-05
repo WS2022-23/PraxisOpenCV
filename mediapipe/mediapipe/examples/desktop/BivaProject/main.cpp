@@ -338,7 +338,7 @@ mediapipe::Status run(){
                     int y = landmark.y() * camera_frame.rows;
                     fingertip = cv::Point(x,y);
                     circle(camera_frame, fingertip, 3, Scalar(255,0,0),-1, 8, 0);
-                    if (drawing)
+                    if (drawing && sign == -1)
                     {
                         // es soll nur beim ZeigeFinger gezeichnet werden deswegen das i == 8
                         if(i == 8 && res > distance) {
@@ -506,48 +506,47 @@ mediapipe::Status run(){
             }
         }
 
-        if (sign == -1)
+        
+        // Zeichnet die Punkte und Linien, die durch den Zeigefinger erzeugt werden
+        for (size_t i = 1; i < hand_landmarks.size(); i++)
         {
-            // Zeichnet die Punkte und Linien, die durch den Zeigefinger erzeugt werden
-            for (size_t i = 1; i < hand_landmarks.size(); i++)
-            {
-                circle(camera_frame, hand_landmarks[i-1], 7, hand_landmarks_Color[i-1],-1, 8, 0);
-                if (hand_landmarks_lines.size() >= 1) {
-                    if (hand_landmarks_lines[i-1] == 1) {
-                        line(camera_frame, hand_landmarks[i-1], hand_landmarks[i], hand_landmarks_Color[i-1], 14);
-                    }
+            circle(camera_frame, hand_landmarks[i-1], 7, hand_landmarks_Color[i-1],-1, 8, 0);
+            if (hand_landmarks_lines.size() >= 1) {
+                if (hand_landmarks_lines[i-1] == 1) {
+                    line(camera_frame, hand_landmarks[i-1], hand_landmarks[i], hand_landmarks_Color[i-1], 14);
                 }
             }
-            if(hand_landmarks.size() > 0) {
-                circle(camera_frame, hand_landmarks[hand_landmarks.size()-1], 7, hand_landmarks_Color[hand_landmarks_Color.size()-1],-1, 8, 0);
-            
-            }
         }
+        if(hand_landmarks.size() > 0) {
+            circle(camera_frame, hand_landmarks[hand_landmarks.size()-1], 7, hand_landmarks_Color[hand_landmarks_Color.size()-1],-1, 8, 0);
+        
+        }
+
         
         // Wenn eines der Switch-Cases ausgewählt wird, werden auf der getrackten Hand das dazugehörige Bild gezeichnet
         switch (sign)
         {
-        case 1:
+        case THUMB_UP:
             cv::putText(camera_frame, "thumb UP", Point(30, 150), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0, 255), 2, LINE_AA);
             overlayPNG(camera_frame,pepeOK, Hand, false);
             break;
-        case 2:
+        case PEACE_SIGN:
             cv::putText(camera_frame, "PEACE SIGN", Point(30, 150), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0, 255), 2, LINE_AA);
             overlayPNG(camera_frame,peace, Hand, false);
             break;
-        case 3:
+        case LITTLE_DEVIL:
             cv::putText(camera_frame, "little Devil", Point(30, 150), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0, 255), 2, LINE_AA);
             overlayPNG(camera_frame,devil, Hand, false);
             break;
-        case 4:
+        case OKAY:
             cv::putText(camera_frame, "OKAY", Point(30, 150), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0, 255), 2, LINE_AA);
             overlayPNG(camera_frame,OkayMeme, Hand, false);
             break;
-        case 5:
+        case MIDDLE_FINGER:
             cv::putText(camera_frame, "MIDDLE FINGER", Point(30, 150), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0, 255), 2, LINE_AA);
             overlayPNG(camera_frame, middleFinger, Hand, false);
             break;
-        case 6:
+        case FIST:
             cv::putText(camera_frame, "FIST", Point(30, 150), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0, 255), 2, LINE_AA);
             overlayPNG(camera_frame, theRock, Hand, false);
             break;
