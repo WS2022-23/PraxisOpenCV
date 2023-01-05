@@ -1,0 +1,9 @@
+W:/Dokumente/Hochschule/7. Semester/BiVa1/Projekt/PraxisOpenCV/build/CMakeFiles/Experimental.dir
+W:/Dokumente/Hochschule/7. Semester/BiVa1/Projekt/PraxisOpenCV/build/CMakeFiles/Nightly.dir
+W:/Dokumente/Hochschule/7. Semester/BiVa1/Projekt/PraxisOpenCV/build/CMakeFiles/Continuous.dir
+W:/Dokumente/Hochschule/7. Semester/BiVa1/Projekt/PraxisOpenCV/build/CMakeFiles/NightlyMemoryCheck.dir
+W:/Dokumente/Hochschule/7. Semester/BiVa1/Projekt/PraxisOpenCV/build/CMakeFiles/PraxisOpenCV.dir
+W:/Dokumente/Hochschule/7. Semester/BiVa1/Projekt/PraxisOpenCV/build/CMakeFiles/PACKAGE.dir
+W:/Dokumente/Hochschule/7. Semester/BiVa1/Projekt/PraxisOpenCV/build/CMakeFiles/RUN_TESTS.dir
+W:/Dokumente/Hochschule/7. Semester/BiVa1/Projekt/PraxisOpenCV/build/CMakeFiles/ALL_BUILD.dir
+W:/Dokumente/Hochschule/7. Semester/BiVa1/Projekt/PraxisOpenCV/build/CMakeFiles/ZERO_CHECK.dir

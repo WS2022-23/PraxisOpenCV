@@ -1,0 +1,10 @@
+^W:\DOKUMENTE\HOCHSCHULE\7. SEMESTER\BIVA1\PROJEKT\PRAXISOPENCV\CMAKELISTS.TXT
+setlocal
+W:\CMake\cmake-3.25.1-windows-x86_64\bin\cmake.exe "-SW:/Dokumente/Hochschule/7. Semester/BiVa1/Projekt/PraxisOpenCV" "-BW:/Dokumente/Hochschule/7. Semester/BiVa1/Projekt/PraxisOpenCV/build" --check-stamp-file "W:/Dokumente/Hochschule/7. Semester/BiVa1/Projekt/PraxisOpenCV/build/CMakeFiles/generate.stamp"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

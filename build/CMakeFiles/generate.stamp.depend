@@ -1,0 +1,39 @@
+# CMake generation dependency list for this directory.
+C:/Dev/OpenCV/opencv/build/x64/vc15/lib/OpenCVConfig-version.cmake
+C:/Dev/OpenCV/opencv/build/x64/vc15/lib/OpenCVConfig.cmake
+C:/Dev/OpenCV/opencv/build/x64/vc15/lib/OpenCVModules-debug.cmake
+C:/Dev/OpenCV/opencv/build/x64/vc15/lib/OpenCVModules-release.cmake
+C:/Dev/OpenCV/opencv/build/x64/vc15/lib/OpenCVModules.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/CMakeCInformation.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/CMakeCXXInformation.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/CMakeCommonLanguageInclude.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/CMakeGenericSystem.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/CMakeInitializeConfigs.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/CMakeLanguageInformation.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/CMakeRCInformation.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/CMakeSystemSpecificInformation.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/CMakeSystemSpecificInitialize.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/CPack.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/CPackComponent.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/CTest.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/CTestTargets.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/CTestUseLaunchers.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/Compiler/CMakeCommonCompilerMacros.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/Compiler/MSVC-C.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/Compiler/MSVC-CXX.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/Compiler/MSVC.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/DartConfiguration.tcl.in
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/FindPackageHandleStandardArgs.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/FindPackageMessage.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/Platform/Windows-MSVC-C.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/Platform/Windows-MSVC-CXX.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/Platform/Windows-MSVC.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/Platform/Windows.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Modules/Platform/WindowsPaths.cmake
+W:/CMake/cmake-3.25.1-windows-x86_64/share/cmake-3.25/Templates/CPackConfig.cmake.in
+W:/Dokumente/Hochschule/7. Semester/BiVa1/Projekt/PraxisOpenCV/CMakeLists.txt
+W:/Dokumente/Hochschule/7. Semester/BiVa1/Projekt/PraxisOpenCV/build/CMakeFiles/3.25.1/CMakeCCompiler.cmake
+W:/Dokumente/Hochschule/7. Semester/BiVa1/Projekt/PraxisOpenCV/build/CMakeFiles/3.25.1/CMakeCXXCompiler.cmake
+W:/Dokumente/Hochschule/7. Semester/BiVa1/Projekt/PraxisOpenCV/build/CMakeFiles/3.25.1/CMakeRCCompiler.cmake
+W:/Dokumente/Hochschule/7. Semester/BiVa1/Projekt/PraxisOpenCV/build/CMakeFiles/3.25.1/CMakeSystem.cmake
+W:/Dokumente/Hochschule/7. Semester/BiVa1/Projekt/PraxisOpenCV/config.hpp.in

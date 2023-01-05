@@ -3,6 +3,7 @@
 #include <config.hpp>
 #include "stdio.h"
 #include <chrono>
+#include <list>
 
 #define WindowName "Test"
 
@@ -10,7 +11,28 @@ using namespace cv;
 using namespace std;
 using namespace std::chrono;
 
+std::vector<cv::Mat> readVideo(string videoPath) {
+    bool ok;
+    Mat frame;
+    Mat frameCopy;
+    std::vector<cv::Mat> frameVector;
+    VideoCapture video;
+    video.open(videoPath);
+    
+    while (video.isOpened()) {
+        ok = video.read(frame);
 
+        if (!ok) {
+            break;
+        }
+
+        frameCopy = frame;
+        frameVector.push_back(frameCopy);
+        return frameVector;
+    }
+
+    video.release();
+}
 
 void resizeImage(Mat& image) {
 
@@ -89,17 +111,47 @@ int main(int, char**) {
     Mat dealWithIt = imread(SRC_PATH"\\pictures\\Thug-Life-Sunglasses-PNG.png",IMREAD_UNCHANGED);
     Mat jonny = imread(SRC_PATH"\\pictures\\joint.png", IMREAD_UNCHANGED);
     Mat imageGray;
+
+    int camIndex;
+    std::list<int> indexList;
+    const unsigned char ae = static_cast<unsigned char>(132);
+    std::vector<Mat> videoFrames;
+    string videoPath = SRC_PATH"\\pictures\\DOGG.gif";
+    Mat testFrame;
+
     std::vector<Rect> faces;
-    namedWindow(WindowName, cv::WINDOW_NORMAL);
-    VideoCapture cap(0);
+    VideoCapture cap;
 
     cap.set(CAP_PROP_FRAME_WIDTH, 1280);
     cap.set(CAP_PROP_FRAME_HEIGHT, 720);
+
+    for (int i = -10; i < 11; i++)  {
+        cap.open(i);
+        if (cap.isOpened())
+        {
+            indexList.push_back(i);
+        }
+    }
+
+    std::cout << indexList.size() << " Kamera(s) wurden mit folgenden Indizes gefunden:" << endl;
+    for (int i : indexList)
+    {
+        std::cout << i << endl;
+    }
+    std::cout << "Index w" << ae << "hlen: ";
+    std::cin >> camIndex;
+
+    namedWindow(WindowName, cv::WINDOW_NORMAL);
+
+    cap.open(camIndex);
 
     if (!cap.isOpened())
     {
         std::cout << "Die Kamera ist geschlossen!!!";
     }
+
+    videoFrames = readVideo(videoPath);
+
     bool running = true;
     while (running)
     {
@@ -155,6 +207,12 @@ int main(int, char**) {
                 overlay = Point(face.x + (mouth[0].x) / 2.0 + 192, face.y + (mouth[0].y) / 2.0 + 192);
                 Rect roi(overlay.x, overlay.y, face.width, face.height);
                 image = overlayPNG(image, jonny, roi, true);
+            }
+            if (mouth.size() >= 1) {
+                overlay = Point(face.x + (mouth[0].x) / 2.0 + 192, face.y + (mouth[0].y) / 2.0 + 192);
+                Rect roi(overlay.x, overlay.y, face.width, face.height);
+                testFrame = videoFrames[0];
+                image = overlayPNG(image, testFrame, roi, true);
             }
         }
 
