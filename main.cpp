@@ -13,13 +13,14 @@ using namespace std::chrono;
 
 std::vector<cv::Mat> readVideo(string videoPath) {
     bool ok;
-    Mat frame;
-    Mat frameCopy;
+    
     std::vector<cv::Mat> frameVector;
     VideoCapture video;
     video.open(videoPath);
     
     while (video.isOpened()) {
+        Mat frame;
+        Mat frameCopy;
         ok = video.read(frame);
 
         if (!ok) {
@@ -28,10 +29,11 @@ std::vector<cv::Mat> readVideo(string videoPath) {
 
         cvtColor(frame, frameCopy, COLOR_RGB2RGBA);
         frameVector.push_back(frameCopy);
-        return frameVector;
+        
     }
-
+    
     video.release();
+    return frameVector;
 }
 
 void resizeImage(Mat& image) {
@@ -95,31 +97,42 @@ Mat overlayPNG(Mat imgBack, Mat imgFront, Rect pos = Rect(), bool centered = fal
 int main(int, char**) {
     
     time_point<steady_clock> begin_time = steady_clock::now(), new_time;
+    time_point<steady_clock> snoopBeginTime = steady_clock::now(), snoopTime;
+    time_point<steady_clock> jonnyBeginTime = steady_clock::now(), jonnyTime;
+
     size_t frame_counter = 0;
     size_t fps = 0;
     string openCvPath = OPENCV_PATH;
     openCvPath = openCvPath.substr(0, openCvPath.length() - 12);
-    string cascPath = openCvPath+ "\\etc\\lbpcascades\\lbpcascade_frontalface_improved.xml";
-    string eyeCascPath = openCvPath + "\\etc\\haarcascades\\haarcascade_eye.xml";
+    string cascPath = SRC_PATH  "\\haarcascades\\lbpcascade_frontalface_improved.xml";
+    string eyeCascPath = SRC_PATH  "\\\\haarcascades\\haarcascade_eye.xml";
     string mouthCascPath = SRC_PATH"\\haarcascades\\haarcascade_mcs_mouth.xml";
-
+    string shoulderCascPath = SRC_PATH"\\haarcascades\\haarcascade_upperbody.xml";
     auto faceCascade = CascadeClassifier(cascPath);
     auto eyeCascade = CascadeClassifier(eyeCascPath);
     auto mouthCascade = CascadeClassifier(mouthCascPath);
+    auto shoulderCascade = CascadeClassifier(shoulderCascPath);
     Mat camera_frame;
     Mat origImage;
     Mat dealWithIt = imread(SRC_PATH"\\pictures\\Thug-Life-Sunglasses-PNG.png",IMREAD_UNCHANGED);
-    Mat jonny = imread(SRC_PATH"\\pictures\\joint.png", IMREAD_UNCHANGED);
+    //Mat jonny = imread(SRC_PATH"\\pictures\\joint.png", IMREAD_UNCHANGED);
+    string jonnyVideoPath = SRC_PATH"\\pictures\\joint-animated.gif";
+
     Mat imageGray;
+
+    uint32_t gifIndexSnoop = 0;
+    uint32_t gifIndexJonny = 0;
 
     int camIndex;
     std::list<int> indexList;
     const unsigned char ae = static_cast<unsigned char>(132);
-    std::vector<Mat> videoFrames;
+    std::vector<Mat> videoFramesSnoop;
+    std::vector<Mat> videoFramesJonny;
     string videoPath = SRC_PATH"\\pictures\\DOGG.gif";
     Mat testFrame;
 
     std::vector<Rect> faces;
+    std::vector<Rect> shoulders;
     VideoCapture cap;
 
     cap.set(CAP_PROP_FRAME_WIDTH, 1280);
@@ -150,7 +163,13 @@ int main(int, char**) {
         std::cout << "Die Kamera ist geschlossen!!!";
     }
 
-    videoFrames = readVideo(videoPath);
+    videoFramesSnoop = readVideo(videoPath);
+    videoFramesJonny = readVideo(jonnyVideoPath);
+
+    for(int i = 0; i < videoFramesJonny.size(); i++)
+    {
+        flip(videoFramesJonny[i], videoFramesJonny[i], 1);
+    }
 
     bool running = true;
     while (running)
@@ -158,6 +177,7 @@ int main(int, char**) {
         cap >> origImage;
         cvtColor(origImage, camera_frame, COLOR_BGR2BGRA);
         cvtColor(origImage, imageGray, COLOR_BGR2GRAY);
+
         faceCascade.detectMultiScale(
             imageGray,
             faces,
@@ -168,15 +188,14 @@ int main(int, char**) {
         );
         Point center;
         Point overlay;
+
         
         for (Rect face : faces)
         {
-            rectangle(camera_frame, face, Scalar(0, 255, 0, 255), 2);
+            //rectangle(camera_frame, face, Scalar(0, 255, 0, 255), 2);
             Mat faceRoi = camera_frame(face);
             vector<Rect> eyes;
             vector<Rect> mouth;
-            testFrame = videoFrames[0];
-            camera_frame = overlayPNG(camera_frame, testFrame, face, true);
             Mat eyeRoi = faceRoi(Rect(0, 0, faceRoi.cols, faceRoi.rows / 2));
             Mat mouthRoi = faceRoi(Rect(0, faceRoi.rows / 2, faceRoi.cols, faceRoi.rows / 2));
             eyeCascade.detectMultiScale(
@@ -203,24 +222,52 @@ int main(int, char**) {
                     center = Point(face.x + eyes[i].x + eyes[i].width * 0.5, face.y + eyes[i].y + eyes[i].height * 0.5);
 
                     int radius = cvRound((eyes[i].width + eyes[i].height) * 0.25);
-                    circle(camera_frame, center, radius, Scalar(255, 0, 0), 1, 8, 0);
+                    //circle(camera_frame, center, radius, Scalar(255, 0, 0), 1, 8, 0);
                 }
             }
             
             if (mouth.size() >= 1) {
                 overlay = Point(face.x + (mouth[0].x + 2 + mouth[0].width / 2), face.y + face.height / 2+ (mouth[0].y + mouth[0].height / 2));
-
                 cv::Rect roi(overlay.x, overlay.y, face.width, face.height);
-                overlayPNG(camera_frame, jonny, roi, false);
+                //rectangle(camera_frame, roi, Scalar(0, 255, 0, 255), 2);
+                if (gifIndexJonny >= videoFramesJonny.size()) {
+                    gifIndexJonny = 0;
+                }
+                jonnyTime = steady_clock::now();
+
+                overlayPNG(camera_frame, videoFramesJonny[gifIndexJonny], roi, false);
+                if (jonnyTime - jonnyBeginTime >= milliseconds{ 100 }) {
+                    gifIndexJonny++;
+                    jonnyBeginTime = jonnyTime;
+                }
+                
             }
                 
-             
-            /* if (mouth.size() >= 1) {
-                overlay = Point(face.x + (mouth[0].x) / 2.0 + 192, face.y + (mouth[0].y) / 2.0 + 192);
-                Rect roi(overlay.x, overlay.y, face.width, face.height);
-                testFrame = videoFrames[0];
-                image = overlayPNG(image, testFrame, roi, true);
-            }*/
+        }
+
+        shoulderCascade.detectMultiScale(
+            imageGray,
+            shoulders,
+            1.1,
+            3,
+            0,
+            Size(30, 30)
+        );
+        for (Rect shoulder : shoulders) {
+            //rectangle(camera_frame, shoulder, Scalar(0, 255, 0, 255), 2);
+            overlay = Point(shoulder.x+50, shoulder.y + shoulder.height / 2);
+            Rect roi(overlay.x, overlay.y, 150, 150);
+            if (gifIndexSnoop >= videoFramesSnoop.size()) {
+                gifIndexSnoop = 0;
+            }
+            testFrame = videoFramesSnoop[gifIndexSnoop];
+            snoopTime = steady_clock::now();
+            camera_frame = overlayPNG(camera_frame, testFrame, roi, true);
+            if (snoopTime - snoopBeginTime >= milliseconds{ 100 }) {
+                gifIndexSnoop++;
+                snoopBeginTime = snoopTime;
+            }
+            
         }
 
         frame_counter++;
