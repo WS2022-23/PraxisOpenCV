@@ -26,7 +26,7 @@ std::vector<cv::Mat> readVideo(string videoPath) {
             break;
         }
 
-        frameCopy = frame;
+        cvtColor(frame, frameCopy, COLOR_RGB2RGBA);
         frameVector.push_back(frameCopy);
         return frameVector;
     }
@@ -80,9 +80,9 @@ Mat overlayPNG(Mat imgBack, Mat imgFront, Rect pos = Rect(), bool centered = fal
     {
         for (int j = 0; j < imgFront.rows; j++)
         {
-            if (!(imgFront.at<Vec4b>(j, i)[3] <=250 ))
+            if (!(imgFront.at<Vec4b>(j, i)[3] <=250 || (imgFront.at<Vec4b>(j, i)[0] == 255 && imgFront.at<Vec4b>(j, i)[1] == 255 && imgFront.at<Vec4b>(j, i)[2] == 255)))
             {
-                if((j + pos.y) < imgBack.rows && (i + pos.x) < imgBack.cols )
+                if((j + pos.y) < imgBack.rows && (j + pos.y) >=0 && (i + pos.x) < imgBack.cols && (i + pos.x) >=0 )
                     imgBack.at<Vec4b>(j + pos.y, i + pos.x) = imgFront.at<Vec4b>(j, i);
             }
         }
@@ -106,7 +106,7 @@ int main(int, char**) {
     auto faceCascade = CascadeClassifier(cascPath);
     auto eyeCascade = CascadeClassifier(eyeCascPath);
     auto mouthCascade = CascadeClassifier(mouthCascPath);
-    Mat image;
+    Mat camera_frame;
     Mat origImage;
     Mat dealWithIt = imread(SRC_PATH"\\pictures\\Thug-Life-Sunglasses-PNG.png",IMREAD_UNCHANGED);
     Mat jonny = imread(SRC_PATH"\\pictures\\joint.png", IMREAD_UNCHANGED);
@@ -156,7 +156,7 @@ int main(int, char**) {
     while (running)
     {
         cap >> origImage;
-        cvtColor(origImage, image, COLOR_BGR2BGRA);
+        cvtColor(origImage, camera_frame, COLOR_BGR2BGRA);
         cvtColor(origImage, imageGray, COLOR_BGR2GRAY);
         faceCascade.detectMultiScale(
             imageGray,
@@ -171,13 +171,16 @@ int main(int, char**) {
         
         for (Rect face : faces)
         {
-            rectangle(image, face, Scalar(0, 255, 0, 255), 2);
-            Mat faceRoi = image(face);
+            rectangle(camera_frame, face, Scalar(0, 255, 0, 255), 2);
+            Mat faceRoi = camera_frame(face);
             vector<Rect> eyes;
             vector<Rect> mouth;
-
+            testFrame = videoFrames[0];
+            camera_frame = overlayPNG(camera_frame, testFrame, face, true);
+            Mat eyeRoi = faceRoi(Rect(0, 0, faceRoi.cols, faceRoi.rows / 2));
+            Mat mouthRoi = faceRoi(Rect(0, faceRoi.rows / 2, faceRoi.cols, faceRoi.rows / 2));
             eyeCascade.detectMultiScale(
-                faceRoi,
+                eyeRoi,
                 eyes,
                 1.1, 2,
                 0 | CASCADE_SCALE_IMAGE,
@@ -185,7 +188,7 @@ int main(int, char**) {
             );
 
             mouthCascade.detectMultiScale(
-                faceRoi,
+                mouthRoi,
                 mouth,
                 1.1, 2,
                 0 | CASCADE_SCALE_IMAGE,
@@ -195,25 +198,29 @@ int main(int, char**) {
             if (eyes.size() >= 2) {
                 overlay = Point(face.x + (eyes[0].x + eyes[1].x) / 2.0 + eyes[0].width * 0.5, face.y + (eyes[0].y + eyes[1].y) / 2.0 + eyes[0].height * 0.5);
                 Rect roi(overlay.x, overlay.y, face.width, face.height);
-                image = overlayPNG(image, dealWithIt, roi, true);
+                camera_frame = overlayPNG(camera_frame, dealWithIt, roi, true);
                 for (int i = 0; i < 2; i++) {
                     center = Point(face.x + eyes[i].x + eyes[i].width * 0.5, face.y + eyes[i].y + eyes[i].height * 0.5);
 
                     int radius = cvRound((eyes[i].width + eyes[i].height) * 0.25);
-                    circle(image, center, radius, Scalar(255, 0, 0), 1, 8, 0);
+                    circle(camera_frame, center, radius, Scalar(255, 0, 0), 1, 8, 0);
                 }
             }
+            
             if (mouth.size() >= 1) {
-                overlay = Point(face.x + (mouth[0].x) / 2.0 + 192, face.y + (mouth[0].y) / 2.0 + 192);
-                Rect roi(overlay.x, overlay.y, face.width, face.height);
-                image = overlayPNG(image, jonny, roi, true);
+                overlay = Point(face.x + (mouth[0].x + 2 + mouth[0].width / 2), face.y + face.height / 2+ (mouth[0].y + mouth[0].height / 2));
+
+                cv::Rect roi(overlay.x, overlay.y, face.width, face.height);
+                overlayPNG(camera_frame, jonny, roi, false);
             }
-            if (mouth.size() >= 1) {
+                
+             
+            /* if (mouth.size() >= 1) {
                 overlay = Point(face.x + (mouth[0].x) / 2.0 + 192, face.y + (mouth[0].y) / 2.0 + 192);
                 Rect roi(overlay.x, overlay.y, face.width, face.height);
                 testFrame = videoFrames[0];
                 image = overlayPNG(image, testFrame, roi, true);
-            }
+            }*/
         }
 
         frame_counter++;
@@ -223,9 +230,9 @@ int main(int, char**) {
             frame_counter = 0;
             begin_time = new_time;
         }
-        putText(image, to_string(fps), Point(30, 30), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0, 255), 2, LINE_AA);
+        putText(camera_frame, to_string(fps), Point(30, 30), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0, 255), 2, LINE_AA);
 
-        imshow(WindowName, image);
+        imshow(WindowName, camera_frame);
         
 
         char key = waitKey(1);
@@ -234,7 +241,7 @@ int main(int, char**) {
         running = getWindowProperty(WindowName, WND_PROP_VISIBLE) > 0;
         if (running)
         {
-            resizeImage(image);
+            resizeImage(camera_frame);
         }
     }
     return 0;
