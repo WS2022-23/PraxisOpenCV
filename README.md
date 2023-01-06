@@ -21,5 +21,7 @@ In diesem Repository befindet sich das Praktikumsprojekt aus der Veranstaltung B
 ## Quellen
     - eye detection: https://www.tutorialspoint.com/how-to-track-the-eye-in-opencv-using-cplusplus
     - bild laden anzeigen https://www.tutorialkart.com/opencv/python/opencv-python-read-png-images-with-transparency-channel/
+    - Video (GIF) laden https://stackoverflow.com/questions/23177845/opencv-imread-doesnt-work/56252616#56252616
+    - Kamera auswählen https://www.selfmadetechie.com/how-to-create-a-webcam-video-capture-using-opencv-c
 
 ![QR-Code https://www.youtube.com/watch?v=hGlyFc79BUE](https://cdn.discordapp.com/attachments/706821180426027058/960587179514560652/unknown1.png)
