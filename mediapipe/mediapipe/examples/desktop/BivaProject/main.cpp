@@ -323,8 +323,8 @@ mediapipe::Status run(){
     //Deaktivieren der Bilder
     bool run = true;
     int Index = -1; 
-    std::cout << "0 für Deaktivieren der Bilder" << endl;
-    std::cout << "1 für Aktivieren der Bilder" << endl;
+    std::cout << "0: Deaktivieren der Bilder" << endl;
+    std::cout << "1: Aktivieren der Bilder" << endl;
     while (!(Index == 1 || Index == 0))
     {
         std::cin >> Index;
