@@ -439,9 +439,9 @@ mediapipe::Status run(){
         //Gibt wieder ob man sich gerade im Zeichnen Modus oder nicht befindet
         if (drawing)
         {
-            cv::putText(camera_frame, "Drawing Aktivated", Point(30, camera_frame.rows - 30), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0, 255), 2, LINE_AA);
+            cv::putText(camera_frame, "Drawing Activated", Point(30, camera_frame.rows - 30), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0, 255), 2, LINE_AA);
         }else {
-            cv::putText(camera_frame, "Drawing Deaktivated", Point(30, camera_frame.rows - 30), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 0, 0, 255), 2, LINE_AA);
+            cv::putText(camera_frame, "Drawing Deactivated", Point(30, camera_frame.rows - 30), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 0, 0, 255), 2, LINE_AA);
         }
         
 
