@@ -44,6 +44,4 @@ die main.cpp ist lediglich eine Kopie und kann nicht durch zu einer Ausführbare
     - Kamera auswählen https://www.selfmadetechie.com/how-to-create-a-webcam-video-capture-using-opencv-c
     - Wie man Handzeichen ermittlen könnte https://gist.github.com/TheJLifeX/74958cc59db477a91837244ff598ef4a
     - Wie mediapipe in c++ funktioniert https://github.com/google/mediapipe/blob/master/mediapipe/examples/desktop/demo_run_graph_main.cc
-
-
-![QR-Code https://www.youtube.com/watch?v=hGlyFc79BUE](https://cdn.discordapp.com/attachments/706821180426027058/960587179514560652/unknown1.png)
+    -Allgemeine git doku https://docs.opencv.org/4.x/
