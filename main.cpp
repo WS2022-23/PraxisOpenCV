@@ -127,6 +127,33 @@ int detectSign(mediapipe::NormalizedLandmarkList landmarkList){
     return -1;
 }
 
+// nimmt von einem GIF oder einer Video-Datei jeden Frame und speichert diese in einen Vektor 
+std::vector<cv::Mat> readVideo(string videoPath) {
+    bool ok;
+    
+    std::vector<cv::Mat> frameVector;
+    VideoCapture video;
+    video.open(videoPath);
+    
+    while (video.isOpened()) {
+        Mat frame;
+        Mat frameCopy;
+        ok = video.read(frame);
+
+        if (!ok) {
+            break;
+        }
+
+        cvtColor(frame, frameCopy, COLOR_RGB2RGBA);
+        frameVector.push_back(frameCopy);
+        
+    }
+    
+    video.release();
+    return frameVector;
+}
+
+
 void resizeImage(Mat& image) {
 
     cv::Rect windowSizes = getWindowImageRect(WindowName);
@@ -146,13 +173,16 @@ void resizeImage(Mat& image) {
 
 void overlayPNG(Mat& imgBack, Mat imgFront, cv::Rect pos = cv::Rect(), bool centered = false) {
 
-    if (pos == cv::Rect()) {
-        pos = cv::Rect(0, 0, imgBack.cols, imgBack.rows);
+    if (pos == Rect()) {
+    pos = Rect(0, 0, imgBack.cols, imgBack.rows);
     }
+
     
+    //pos = Rect(0, 0, imgFront.cols , imgFront.rows-100);
     Size sizePos(min(pos.width,imgBack.cols), min(pos.height, imgBack.rows));
     float aspectPos = sizePos.width / (float)sizePos.height;
     float aspectFront = imgFront.cols / (float)imgFront.rows;
+
 
     if (imgFront.cols > pos.width) {
         resize(imgFront, imgFront, Size(pos.width, round(pos.width / aspectFront)));
@@ -160,6 +190,7 @@ void overlayPNG(Mat& imgBack, Mat imgFront, cv::Rect pos = cv::Rect(), bool cent
     if (imgFront.rows > pos.height) {
         resize(imgFront, imgFront, Size(round(pos.height * aspectFront),pos.height ));
     }
+
     if (centered) {
         pos.x -= imgFront.cols / 2;
         pos.y -= imgFront.rows / 2;
@@ -168,9 +199,9 @@ void overlayPNG(Mat& imgBack, Mat imgFront, cv::Rect pos = cv::Rect(), bool cent
     {
         for (int j = 0; j < imgFront.rows; j++)
         {
-            if (!(imgFront.at<Vec4b>(j, i)[3] <=250 ))
+            if (!(imgFront.at<Vec4b>(j, i)[3] <=250 || (imgFront.at<Vec4b>(j, i)[0] == 255 && imgFront.at<Vec4b>(j, i)[1] == 255 && imgFront.at<Vec4b>(j, i)[2] == 255)))
             {
-                if((j + pos.y) < imgBack.rows && (i + pos.x) < imgBack.cols )
+                if((j + pos.y) < imgBack.rows && (j + pos.y) >=0 && (i + pos.x) < imgBack.cols && (i + pos.x) >=0 )
                     imgBack.at<Vec4b>(j + pos.y, i + pos.x) = imgFront.at<Vec4b>(j, i);
             }
         }
@@ -197,6 +228,11 @@ mediapipe::Status run(){
     time_point<steady_clock> begin_time_CLEAR = steady_clock::now();
     time_point<steady_clock> new_time_CLEAR;
     bool clear = false;
+    //Zeit für die Animationen
+    time_point<steady_clock> snoopBeginTime = steady_clock::now(), snoopTime;
+    time_point<steady_clock> jonnyBeginTime = steady_clock::now(), jonnyTime;
+    uint32_t gifIndexSnoop = 0;
+    uint32_t gifIndexJonny = 0;
 
     //Variablen für die Hände
     mediapipe::NormalizedLandmarkList single_hand_NormalizedLandmarkList;
@@ -214,23 +250,27 @@ mediapipe::Status run(){
     // OpenCV: Pfade zu Erkennungsmodelle
     string openCvPath = OPENCV_PATH;
     openCvPath = openCvPath.substr(0, openCvPath.length() - 12);
-    string cascPath = openCvPath + "\\etc\\lbpcascades\\lbpcascade_frontalface_improved.xml";
-    string eyeCascPath = openCvPath + "\\etc\\haarcascades\\haarcascade_eye.xml";
+    string cascPath = SRC_PATH  "\\haarcascades\\lbpcascade_frontalface_improved.xml";
+    string eyeCascPath = SRC_PATH  "\\haarcascades\\haarcascade_eye.xml";
     string mouthCascPath = SRC_PATH"\\haarcascades\\haarcascade_mcs_mouth.xml";
+    string shoulderCascPath = SRC_PATH"\\haarcascades\\haarcascade_upperbody.xml";
     auto faceCascade = CascadeClassifier(cascPath);
     std::vector<cv::Rect> faces;
+    std::vector<cv::Rect> shoulders;
     auto eyeCascade = CascadeClassifier(eyeCascPath);
     auto mouthCascade = CascadeClassifier(mouthCascPath);
+    auto shoulderCascade = CascadeClassifier(shoulderCascPath);
 
     // Einlesen von Bildern
     cv::Mat dealWithIt = imread(SRC_PATH"\\pictures\\Thug-Life-Sunglasses-PNG.png",IMREAD_UNCHANGED);
-    cv::Mat jonny = imread(SRC_PATH"\\pictures\\joint.png", IMREAD_UNCHANGED);
+    //cv::Mat jonny = imread(SRC_PATH"\\pictures\\joint.png", IMREAD_UNCHANGED);
     cv::Mat middleFinger = imread(SRC_PATH"\\pictures\\MiddleFinger.png",IMREAD_UNCHANGED);
     cv::Mat pepeOK = imread(SRC_PATH"\\pictures\\pepeOK.png",IMREAD_UNCHANGED);
     cv::Mat peace = imread(SRC_PATH"\\pictures\\peace.png",IMREAD_UNCHANGED);
     cv::Mat devil = imread(SRC_PATH"\\pictures\\Angry_Devil_Emoji_large.png",IMREAD_UNCHANGED);
     cv::Mat theRock = imread(SRC_PATH"\\pictures\\theRock.png",IMREAD_UNCHANGED);
     cv::Mat OkayMeme = imread(SRC_PATH"\\pictures\\OkayMeme.png",IMREAD_UNCHANGED);
+    string jonnyVideoPath = SRC_PATH"\\pictures\\joint-animated.gif";
                
     mediapipe::Packet packet;
     int landmarkmaxsize = 600;
@@ -254,16 +294,62 @@ mediapipe::Status run(){
     MP_RETURN_IF_ERROR(graph.Initialize(config));
     LOG(INFO) << "finished.";
 
+    // Variablen für die Kamera
+    int camIndex;
+    std::list<int> indexList;
+    const unsigned char ae = static_cast<unsigned char>(132);
+    std::vector<Mat> videoFramesSnoop;
+    std::vector<Mat> videoFramesJonny;
+    string videoPath = SRC_PATH"\\pictures\\DOGG.gif";
+    Mat testFrame;
+    VideoCapture cap;
+    
+    for (int i = -10; i < 11; i++)  {
+        cap.open(i);
+        if (cap.isOpened())
+        {
+            indexList.push_back(i);
+        }
+    }
+    //Auswahl aller Kameras
+    std::cout << indexList.size() << " Kamera(s) wurden mit folgenden Indizes gefunden:" << endl;
+    for (int i : indexList)
+    {
+        std::cout << i << endl;
+    }
+    std::cout << "Index w" << ae << "hlen: ";
+    std::cin >> camIndex;
+
+    //Deaktivieren der Bilder
+    bool run = true;
+    int Index = -1; 
+    std::cout << "0: Deaktivieren der Bilder" << endl;
+    std::cout << "1: Aktivieren der Bilder" << endl;
+    while (!(Index == 1 || Index == 0))
+    {
+        std::cin >> Index;
+    }
+    run = bool(Index);
+
     // erstellt benutztes Fenster in dem alles gerendert wird
     namedWindow(WindowName, cv::WINDOW_NORMAL);
-    // Variablen für die Kamera
-    VideoCapture cap(0);
+
+    cap.open(camIndex);
     cap.set(CAP_PROP_FRAME_WIDTH, 1280);
     cap.set(CAP_PROP_FRAME_HEIGHT, 720);
     cap.set(cv::CAP_PROP_FPS, 60);
+
     if (!cap.isOpened())
         std::cout << "Die Kamera ist geschlossen!!!\n";
     float distance = 0.04f * cap.get(CAP_PROP_FRAME_HEIGHT);
+
+    videoFramesSnoop = readVideo(videoPath);
+    videoFramesJonny = readVideo(jonnyVideoPath);
+
+    for(int i = 0; i < videoFramesJonny.size(); i++)
+    {
+        flip(videoFramesJonny[i], videoFramesJonny[i], 1);
+    }
 
     // Versucht die Graphen zu benutzen
     ASSIGN_OR_RETURN(mediapipe::OutputStreamPoller poller,
@@ -338,7 +424,7 @@ mediapipe::Status run(){
                     int y = landmark.y() * camera_frame.rows;
                     fingertip = cv::Point(x,y);
                     circle(camera_frame, fingertip, 3, Scalar(255,0,0),-1, 8, 0);
-                    if (drawing)
+                    if (drawing && sign == -1)
                     {
                         // es soll nur beim ZeigeFinger gezeichnet werden deswegen das i == 8
                         if(i == 8 && res > distance) {
@@ -439,115 +525,146 @@ mediapipe::Status run(){
         //Gibt wieder ob man sich gerade im Zeichnen Modus oder nicht befindet
         if (drawing)
         {
-            cv::putText(camera_frame, "Drawing Aktivated", Point(30, camera_frame.rows - 30), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0, 255), 2, LINE_AA);
+            cv::putText(camera_frame, "Drawing Activated", Point(30, camera_frame.rows - 30), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0, 255), 2, LINE_AA);
         }else {
-            cv::putText(camera_frame, "Drawing Deaktivated", Point(30, camera_frame.rows - 30), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 0, 0, 255), 2, LINE_AA);
+            cv::putText(camera_frame, "Drawing Deactivated", Point(30, camera_frame.rows - 30), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 0, 0, 255), 2, LINE_AA);
         }
         
 
         cv::cvtColor(camera_frame, camera_frame, cv::COLOR_BGR2RGBA);
         cv::Mat output_frame_mat_grey;
         cv::cvtColor(camera_frame, output_frame_mat_grey, cv::COLOR_BGR2RGBA);
-        // damit soll mehrere Gesichter erkennen
-        faceCascade.detectMultiScale(
-            output_frame_mat_grey,
-            faces,
-            1.1,
-            3,
-            0,
-            Size(30, 30)
-        );
-
-        Point center;
-        Point overlay;
-        // alle erkennten Gesichter bekommen einige Bilder aufgesetzt 
-        for (cv::Rect face : faces)
-        {
-            Mat faceRoi = camera_frame(face);
-            vector<cv::Rect> eyes;
-            vector<cv::Rect> mouth;
-
-            //Soll Augen erkennen
-            eyeCascade.detectMultiScale(
-                faceRoi,
-                eyes,
-                1.1, 2,
-                0 | CASCADE_SCALE_IMAGE,
-                Size(5, 5)
+        
+            // damit soll mehrere Gesichter erkennen
+            faceCascade.detectMultiScale(
+                output_frame_mat_grey,
+                faces,
+                1.1,
+                3,
+                0,
+                Size(30, 30)
             );
-            
-            //Soll Münder erkennen
-            mouthCascade.detectMultiScale(
-                faceRoi,
-                mouth,
-                1.1, 2,
-                0 | CASCADE_SCALE_IMAGE,
-                Size(5, 5)
-            );
-
-            // Zeichnet einen Sonnenbrille auf jedes Augenpaar welches es finden kann
-            if (eyes.size() >= 2) {
-                overlay = Point(face.x + (eyes[0].x + eyes[1].x) / 2.0 + eyes[0].width * 0.5, face.y + (eyes[0].y + eyes[1].y) / 2.0 + eyes[0].height * 0.5);
-                cv::Rect roi(overlay.x, overlay.y, face.width, face.height);
-                //camera_frame = overlayPNG(camera_frame, dealWithIt, roi, true);
-                overlayPNG(camera_frame, dealWithIt, roi, true);
-                for (int i = 0; i < 2; i++) {
-                    center = Point(face.x + eyes[i].x + eyes[i].width * 0.5, face.y + eyes[i].y + eyes[i].height * 0.5);
-
-                    int radius = cvRound((eyes[i].width + eyes[i].height) * 0.25);
-                    //circle(camera_frame, center, radius, Scalar(255, 0, 0), 1, 8, 0);
-                }
-            }
-            // Zeichnet einen Joint auf jeden Mund welches es finden kann
-            if (mouth.size() >= 1) {
-                overlay = Point(face.x + (mouth[0].x + 2 + mouth[0].width /2), face.y + (mouth[0].y + mouth[0].height/2));
-                cv::Rect roi(overlay.x, overlay.y, face.width, face.height);
-                overlayPNG(camera_frame, jonny, roi, false);
-            }
-        }
-
-        if (sign == -1)
-        {
-            // Zeichnet die Punkte und Linien, die durch den Zeigefinger erzeugt werden
-            for (size_t i = 1; i < hand_landmarks.size(); i++)
+            Point center;
+            Point overlay;
+            // alle erkennten Gesichter bekommen einige Bilder aufgesetzt 
+            for (cv::Rect face : faces)
             {
-                circle(camera_frame, hand_landmarks[i-1], 7, hand_landmarks_Color[i-1],-1, 8, 0);
-                if (hand_landmarks_lines.size() >= 1) {
-                    if (hand_landmarks_lines[i-1] == 1) {
-                        line(camera_frame, hand_landmarks[i-1], hand_landmarks[i], hand_landmarks_Color[i-1], 14);
+                Mat faceRoi = camera_frame(face);
+                vector<cv::Rect> eyes;
+                vector<cv::Rect> mouth;
+
+                //Soll Augen erkennen
+                eyeCascade.detectMultiScale(
+                    faceRoi,
+                    eyes,
+                    1.1, 2,
+                    0 | CASCADE_SCALE_IMAGE,
+                    Size(5, 5)
+                );
+                //Soll Münder erkennen
+                mouthCascade.detectMultiScale(
+                    faceRoi,
+                    mouth,
+                    1.1, 2,
+                    0 | CASCADE_SCALE_IMAGE,
+                    Size(5, 5)
+                ); 
+                // Zeichnet einen Sonnenbrille auf jedes Augenpaar welches es finden kann
+                if (eyes.size() >= 2) {
+                    overlay = Point(face.x + (eyes[0].x + eyes[1].x) / 2.0 + eyes[0].width * 0.5, face.y + (eyes[0].y + eyes[1].y) / 2.0 + eyes[0].height * 0.5);
+                    cv::Rect roi(overlay.x, overlay.y, face.width, face.height);
+                    //camera_frame = overlayPNG(camera_frame, dealWithIt, roi, true);
+                    overlayPNG(camera_frame, dealWithIt, roi, true);
+                    for (int i = 0; i < 2; i++) {
+                        center = Point(face.x + eyes[i].x + eyes[i].width * 0.5, face.y + eyes[i].y + eyes[i].height * 0.5);
+
+                        int radius = cvRound((eyes[i].width + eyes[i].height) * 0.25);
+                        //circle(camera_frame, center, radius, Scalar(255, 0, 0), 1, 8, 0);
+                    }
+                }
+                // Zeichnet einen Joint auf jeden Mund welches es finden kann
+                if (mouth.size() >= 1) {
+                    overlay = Point(face.x + (mouth[0].x + 2 + mouth[0].width /2), face.y + (mouth[0].y + mouth[0].height/2));
+                    cv::Rect roi(overlay.x, overlay.y, face.width, face.height);
+                    if (gifIndexJonny >= videoFramesJonny.size()) {
+                        gifIndexJonny = 0;
+                    }
+                    jonnyTime = steady_clock::now();
+
+                    overlayPNG(camera_frame, videoFramesJonny[gifIndexJonny], roi, false);
+                    if (jonnyTime - jonnyBeginTime >= milliseconds{ 100 }) {
+                        gifIndexJonny++;
+                        jonnyBeginTime = jonnyTime;
                     }
                 }
             }
-            if(hand_landmarks.size() > 0) {
-                circle(camera_frame, hand_landmarks[hand_landmarks.size()-1], 7, hand_landmarks_Color[hand_landmarks_Color.size()-1],-1, 8, 0);
-            
+        if(run) {
+            shoulderCascade.detectMultiScale(
+                output_frame_mat_grey,
+                shoulders,
+                1.1,
+                3,
+                0,
+                Size(30, 30)
+            );
+            for (Rect shoulder : shoulders) {
+                //rectangle(camera_frame, shoulder, Scalar(0, 255, 0, 255), 2);
+                overlay = Point(shoulder.x+50, shoulder.y + shoulder.height / 2);
+                Rect roi(overlay.x, overlay.y, 150, 150);
+                if (gifIndexSnoop >= videoFramesSnoop.size()) {
+                    gifIndexSnoop = 0;
+                }
+                testFrame = videoFramesSnoop[gifIndexSnoop];
+                snoopTime = steady_clock::now();
+                overlayPNG(camera_frame, testFrame, roi, true);
+                if (snoopTime - snoopBeginTime >= milliseconds{ 100 }) {
+                    gifIndexSnoop++;
+                    snoopBeginTime = snoopTime;
+                }
+                break;
             }
         }
+        
+        // Zeichnet die Punkte und Linien, die durch den Zeigefinger erzeugt werden
+        for (size_t i = 1; i < hand_landmarks.size(); i++)
+        {
+            circle(camera_frame, hand_landmarks[i-1], 7, hand_landmarks_Color[i-1],-1, 8, 0);
+            if (hand_landmarks_lines.size() >= 1) {
+                if (hand_landmarks_lines[i-1] == 1) {
+                    line(camera_frame, hand_landmarks[i-1], hand_landmarks[i], hand_landmarks_Color[i-1], 14);
+                }
+            }
+        }
+        if(hand_landmarks.size() > 0) {
+            circle(camera_frame, hand_landmarks[hand_landmarks.size()-1], 7, hand_landmarks_Color[hand_landmarks_Color.size()-1],-1, 8, 0);
+        
+        }
+
         
         // Wenn eines der Switch-Cases ausgewählt wird, werden auf der getrackten Hand das dazugehörige Bild gezeichnet
         switch (sign)
         {
-        case 1:
+        case THUMB_UP:
             cv::putText(camera_frame, "thumb UP", Point(30, 150), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0, 255), 2, LINE_AA);
             overlayPNG(camera_frame,pepeOK, Hand, false);
             break;
-        case 2:
+        case PEACE_SIGN:
             cv::putText(camera_frame, "PEACE SIGN", Point(30, 150), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0, 255), 2, LINE_AA);
             overlayPNG(camera_frame,peace, Hand, false);
             break;
-        case 3:
+        case LITTLE_DEVIL:
             cv::putText(camera_frame, "little Devil", Point(30, 150), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0, 255), 2, LINE_AA);
             overlayPNG(camera_frame,devil, Hand, false);
             break;
-        case 4:
+        case OKAY:
             cv::putText(camera_frame, "OKAY", Point(30, 150), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0, 255), 2, LINE_AA);
             overlayPNG(camera_frame,OkayMeme, Hand, false);
             break;
-        case 5:
+        case MIDDLE_FINGER:
             cv::putText(camera_frame, "MIDDLE FINGER", Point(30, 150), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0, 255), 2, LINE_AA);
             overlayPNG(camera_frame, middleFinger, Hand, false);
             break;
-        case 6:
+        case FIST:
             cv::putText(camera_frame, "FIST", Point(30, 150), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0, 255), 2, LINE_AA);
             overlayPNG(camera_frame, theRock, Hand, false);
             break;
