@@ -1,5 +1,6 @@
 # BildVerarbeitung_OpenCV
 In diesem Repository befindet sich das Praktikumsprojekt aus der Veranstaltung Bildverarbeitung 1 im WiSe 2022/23
+die main.cpp ist lediglich eine Kopie und kann nicht durch zu einer Ausführbare umgewandelt werden
 
 
 ## Projekt mit Microsoft Visual Studio starten
@@ -40,7 +41,7 @@ In diesem Repository befindet sich das Praktikumsprojekt aus der Veranstaltung B
     - eye detection: https://www.tutorialspoint.com/how-to-track-the-eye-in-opencv-using-cplusplus
     - bild laden anzeigen https://www.tutorialkart.com/opencv/python/opencv-python-read-png-images-with-transparency-channel/
     - Wie man Handzeichen ermittlen könnte https://gist.github.com/TheJLifeX/74958cc59db477a91837244ff598ef4a
-    - Wie mediapipe in c++ funktioniert https://github.com/TheJLifeX/mediapipe
+    - Wie mediapipe in c++ funktioniert https://github.com/google/mediapipe/blob/master/mediapipe/examples/desktop/demo_run_graph_main.cc
 
 
 ![QR-Code https://www.youtube.com/watch?v=hGlyFc79BUE](https://cdn.discordapp.com/attachments/706821180426027058/960587179514560652/unknown1.png)
