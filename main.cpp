@@ -127,7 +127,7 @@ int main(int, char**) {
     Mat dealWithIt = imread(SRC_PATH"\\pictures\\Thug-Life-Sunglasses-PNG.png",IMREAD_UNCHANGED);
     //Mat jonny = imread(SRC_PATH"\\pictures\\joint.png", IMREAD_UNCHANGED);
     string jonnyVideoPath = SRC_PATH"\\pictures\\joint-animated.gif";
-
+    Mat shaq = imread(SRC_PATH"\\pictures\\scholz.jpg");
     Mat imageGray;
 
     uint32_t gifIndexSnoop = 0;
@@ -184,7 +184,8 @@ int main(int, char**) {
     bool running = true;
     while (running)
     {
-        cap >> origImage;
+        //cap >> origImage;
+        origImage = shaq;
         cvtColor(origImage, camera_frame, COLOR_BGR2BGRA);
         cvtColor(origImage, imageGray, COLOR_BGR2GRAY);
 
@@ -202,7 +203,8 @@ int main(int, char**) {
         
         for (Rect face : faces)
         {
-            //rectangle(camera_frame, face, Scalar(0, 255, 0, 255), 2);
+            face.height += 20;
+            rectangle(camera_frame, face, Scalar(0, 255, 0, 255), 2);
             Mat faceRoi = camera_frame(face);
             vector<Rect> eyes;
             vector<Rect> mouth;
@@ -227,12 +229,12 @@ int main(int, char**) {
             if (eyes.size() >= 2) {
                 overlay = Point(face.x + (eyes[0].x + eyes[1].x) / 2.0 + eyes[0].width * 0.5, face.y + (eyes[0].y + eyes[1].y) / 2.0 + eyes[0].height * 0.5);
                 Rect roi(overlay.x, overlay.y, face.width, face.height);
-                camera_frame = overlayPNG(camera_frame, dealWithIt, roi, true);
+                //camera_frame = overlayPNG(camera_frame, dealWithIt, roi, true);
                 for (int i = 0; i < 2; i++) {
                     center = Point(face.x + eyes[i].x + eyes[i].width * 0.5, face.y + eyes[i].y + eyes[i].height * 0.5);
 
                     int radius = cvRound((eyes[i].width + eyes[i].height) * 0.25);
-                    //circle(camera_frame, center, radius, Scalar(255, 0, 0), 1, 8, 0);
+                    circle(camera_frame, center, radius, Scalar(0, 255, 0), 1, 8, 0);
                 }
             }
             
@@ -245,7 +247,7 @@ int main(int, char**) {
                 }
                 jonnyTime = steady_clock::now();
 
-                overlayPNG(camera_frame, videoFramesJonny[gifIndexJonny], roi, false, true);
+                //overlayPNG(camera_frame, videoFramesJonny[gifIndexJonny], roi, false, true);
                 if (jonnyTime - jonnyBeginTime >= milliseconds{ 100 }) {
                     gifIndexJonny++;
                     jonnyBeginTime = jonnyTime;
@@ -264,7 +266,7 @@ int main(int, char**) {
             Size(30, 30)
         );
         for (Rect shoulder : shoulders) {
-            //rectangle(camera_frame, shoulder, Scalar(0, 255, 0, 255), 2);
+            rectangle(camera_frame, shoulder, Scalar(0, 255, 0, 255), 2);
             overlay = Point(shoulder.x+50, shoulder.y + shoulder.height / 2);
             Rect roi(overlay.x, overlay.y, 150, 150);
             if (gifIndexSnoop >= videoFramesSnoop.size()) {
