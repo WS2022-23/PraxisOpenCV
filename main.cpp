@@ -54,7 +54,7 @@ void resizeImage(Mat& image) {
 }
 
 
-Mat overlayPNG(Mat imgBack, Mat imgFront, Rect pos = Rect(), bool centered = false) {
+Mat overlayPNG(Mat imgBack, Mat imgFront, Rect pos = Rect(), bool centered = false, bool gif = false) {
 
     if (pos == Rect()) {
         pos = Rect(0, 0, imgBack.cols, imgBack.rows);
@@ -82,11 +82,21 @@ Mat overlayPNG(Mat imgBack, Mat imgFront, Rect pos = Rect(), bool centered = fal
     {
         for (int j = 0; j < imgFront.rows; j++)
         {
-            if (!(imgFront.at<Vec4b>(j, i)[3] <=250 || (imgFront.at<Vec4b>(j, i)[0] == 255 && imgFront.at<Vec4b>(j, i)[1] == 255 && imgFront.at<Vec4b>(j, i)[2] == 255)))
-            {
-                if((j + pos.y) < imgBack.rows && (j + pos.y) >=0 && (i + pos.x) < imgBack.cols && (i + pos.x) >=0 )
-                    imgBack.at<Vec4b>(j + pos.y, i + pos.x) = imgFront.at<Vec4b>(j, i);
+            if (gif) {
+                if (!(imgFront.at<Vec4b>(j, i)[0] == 255 && imgFront.at<Vec4b>(j, i)[1] == 255 && imgFront.at<Vec4b>(j, i)[2] == 255))
+                {
+                    if ((j + pos.y) < imgBack.rows && (j + pos.y) >= 0 && (i + pos.x) < imgBack.cols && (i + pos.x) >= 0)
+                        imgBack.at<Vec4b>(j + pos.y, i + pos.x) = imgFront.at<Vec4b>(j, i);
+                }
             }
+            else {
+                if (!(imgFront.at<Vec4b>(j, i)[3] <=250))
+            {
+                    if((j + pos.y) < imgBack.rows && (j + pos.y) >=0 && (i + pos.x) < imgBack.cols && (i + pos.x) >=0 )
+                        imgBack.at<Vec4b>(j + pos.y, i + pos.x) = imgFront.at<Vec4b>(j, i);
+                }
+            }
+            
         }
     }
 
@@ -235,7 +245,7 @@ int main(int, char**) {
                 }
                 jonnyTime = steady_clock::now();
 
-                overlayPNG(camera_frame, videoFramesJonny[gifIndexJonny], roi, false);
+                overlayPNG(camera_frame, videoFramesJonny[gifIndexJonny], roi, false, true);
                 if (jonnyTime - jonnyBeginTime >= milliseconds{ 100 }) {
                     gifIndexJonny++;
                     jonnyBeginTime = jonnyTime;
@@ -262,7 +272,7 @@ int main(int, char**) {
             }
             testFrame = videoFramesSnoop[gifIndexSnoop];
             snoopTime = steady_clock::now();
-            camera_frame = overlayPNG(camera_frame, testFrame, roi, true);
+            camera_frame = overlayPNG(camera_frame, testFrame, roi, true, true);
             if (snoopTime - snoopBeginTime >= milliseconds{ 100 }) {
                 gifIndexSnoop++;
                 snoopBeginTime = snoopTime;
