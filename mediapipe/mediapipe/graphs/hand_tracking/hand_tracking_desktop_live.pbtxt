@@ -6,9 +6,6 @@
 # CPU image. (ImageFrame)
 input_stream: "input_video"
 
-# CPU image. (ImageFrame)
-output_stream: "output_video"
-
 # # Pose landmarks. (NormalizedLandmarkList)
 output_stream: "landmarks"
 
@@ -33,17 +30,4 @@ node {
   output_stream: "PALM_DETECTIONS:multi_palm_detections"
   output_stream: "HAND_ROIS_FROM_LANDMARKS:multi_hand_rects"
   output_stream: "HAND_ROIS_FROM_PALM_DETECTIONS:multi_palm_rects"
-}
-
-# Subgraph that renders annotations and overlays them on top of the input
-# images (see hand_renderer_cpu.pbtxt).
-node {
-  calculator: "HandRendererSubgraph"
-  input_stream: "IMAGE:input_video"
-  input_stream: "DETECTIONS:multi_palm_detections"
-  input_stream: "LANDMARKS:landmarks"
-  input_stream: "HANDEDNESS:handedness"
-  input_stream: "NORM_RECTS:0:multi_palm_rects"
-  input_stream: "NORM_RECTS:1:multi_hand_rects"
-  output_stream: "IMAGE:output_video"
 }

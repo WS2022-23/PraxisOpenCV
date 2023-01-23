@@ -171,10 +171,10 @@ void resizeImage(Mat& image) {
     resize(image, image, Size(), ratioWidth, ratioHeight);
 }
 
-void overlayPNG(Mat& imgBack, Mat imgFront, cv::Rect pos = cv::Rect(), bool centered = false) {
+void overlayPNG(Mat& imgBack, Mat imgFront, Rect pos = Rect(), bool centered = false, bool gif = false) {
 
     if (pos == Rect()) {
-    pos = Rect(0, 0, imgBack.cols, imgBack.rows);
+        pos = Rect(0, 0, imgBack.cols, imgBack.rows);
     }
 
     
@@ -199,11 +199,21 @@ void overlayPNG(Mat& imgBack, Mat imgFront, cv::Rect pos = cv::Rect(), bool cent
     {
         for (int j = 0; j < imgFront.rows; j++)
         {
-            if (!(imgFront.at<Vec4b>(j, i)[3] <=250 || (imgFront.at<Vec4b>(j, i)[0] == 255 && imgFront.at<Vec4b>(j, i)[1] == 255 && imgFront.at<Vec4b>(j, i)[2] == 255)))
-            {
-                if((j + pos.y) < imgBack.rows && (j + pos.y) >=0 && (i + pos.x) < imgBack.cols && (i + pos.x) >=0 )
-                    imgBack.at<Vec4b>(j + pos.y, i + pos.x) = imgFront.at<Vec4b>(j, i);
+            if (gif) {
+                if (!(imgFront.at<Vec4b>(j, i)[0] == 255 && imgFront.at<Vec4b>(j, i)[1] == 255 && imgFront.at<Vec4b>(j, i)[2] == 255))
+                {
+                    if ((j + pos.y) < imgBack.rows && (j + pos.y) >= 0 && (i + pos.x) < imgBack.cols && (i + pos.x) >= 0)
+                        imgBack.at<Vec4b>(j + pos.y, i + pos.x) = imgFront.at<Vec4b>(j, i);
+                }
             }
+            else {
+                if (!(imgFront.at<Vec4b>(j, i)[3] <=250))
+            {
+                    if((j + pos.y) < imgBack.rows && (j + pos.y) >=0 && (i + pos.x) < imgBack.cols && (i + pos.x) >=0 )
+                        imgBack.at<Vec4b>(j + pos.y, i + pos.x) = imgFront.at<Vec4b>(j, i);
+                }
+            }
+            
         }
     }
 }
@@ -271,7 +281,7 @@ mediapipe::Status run(){
     cv::Mat theRock = imread(SRC_PATH"\\pictures\\theRock.png",IMREAD_UNCHANGED);
     cv::Mat OkayMeme = imread(SRC_PATH"\\pictures\\OkayMeme.png",IMREAD_UNCHANGED);
     string jonnyVideoPath = SRC_PATH"\\pictures\\joint-animated.gif";
-               
+    
     mediapipe::Packet packet;
     int landmarkmaxsize = 600;
     Scalar color(0, 255, 0, 255);
@@ -552,10 +562,12 @@ mediapipe::Status run(){
                 Mat faceRoi = camera_frame(face);
                 vector<cv::Rect> eyes;
                 vector<cv::Rect> mouth;
+                Mat eyeRoi = faceRoi(Rect(0, 0, faceRoi.cols, faceRoi.rows / 2));
+                Mat mouthRoi = faceRoi(Rect(0, faceRoi.rows / 2, faceRoi.cols, faceRoi.rows / 2));
 
                 //Soll Augen erkennen
                 eyeCascade.detectMultiScale(
-                    faceRoi,
+                    eyeRoi,
                     eyes,
                     1.1, 2,
                     0 | CASCADE_SCALE_IMAGE,
@@ -563,7 +575,7 @@ mediapipe::Status run(){
                 );
                 //Soll Münder erkennen
                 mouthCascade.detectMultiScale(
-                    faceRoi,
+                    mouthRoi,
                     mouth,
                     1.1, 2,
                     0 | CASCADE_SCALE_IMAGE,
@@ -584,14 +596,14 @@ mediapipe::Status run(){
                 }
                 // Zeichnet einen Joint auf jeden Mund welches es finden kann
                 if (mouth.size() >= 1) {
-                    overlay = Point(face.x + (mouth[0].x + 2 + mouth[0].width /2), face.y + (mouth[0].y + mouth[0].height/2));
+                    overlay = Point(face.x + (mouth[0].x + 2 + mouth[0].width /2), face.y + face.height/2 + (mouth[0].y + mouth[0].height/2));
                     cv::Rect roi(overlay.x, overlay.y, face.width, face.height);
                     if (gifIndexJonny >= videoFramesJonny.size()) {
                         gifIndexJonny = 0;
                     }
                     jonnyTime = steady_clock::now();
 
-                    overlayPNG(camera_frame, videoFramesJonny[gifIndexJonny], roi, false);
+                    overlayPNG(camera_frame, videoFramesJonny[gifIndexJonny], roi, false, true);
                     if (jonnyTime - jonnyBeginTime >= milliseconds{ 100 }) {
                         gifIndexJonny++;
                         jonnyBeginTime = jonnyTime;
@@ -616,7 +628,7 @@ mediapipe::Status run(){
                 }
                 testFrame = videoFramesSnoop[gifIndexSnoop];
                 snoopTime = steady_clock::now();
-                overlayPNG(camera_frame, testFrame, roi, true);
+                overlayPNG(camera_frame, testFrame, roi, true, true);
                 if (snoopTime - snoopBeginTime >= milliseconds{ 100 }) {
                     gifIndexSnoop++;
                     snoopBeginTime = snoopTime;
@@ -712,6 +724,8 @@ mediapipe::Status run(){
         }
     }
     hand_landmarks.clear();
+    hand_landmarks_lines.clear();
+    hand_landmarks_Color.clear();
     cv::destroyAllWindows();
 
     return mediapipe::OkStatus();

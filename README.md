@@ -57,3 +57,11 @@ die main.cpp ist lediglich eine Kopie und kann nicht durch zu einer Ausführbare
     - Wie mediapipe in c++ funktioniert https://github.com/google/mediapipe/blob/master/mediapipe/examples/desktop/demo_run_graph_main.cc
     - Wie die Hände in MediaPipe angezeigt werden https://google.github.io/mediapipe/solutions/hands.html
     - Allgemeine git doku https://docs.opencv.org/4.x/
+    - Handsup: https://stock.adobe.com/de/search?k=hands+up+surrender&asset_id=244328590 
+    - GIGACHAD: https://production.listennotes.com/podcasts/the-gigachad-podcast-wCoeAVuYZS0-D1eQw4qkMcj.1400x1400.jpg 
+    - ThumbUp: https://cdn.betterttv.net/emote/60c50c33f8b3f62601c3cdb1/3x.webp
+    - Middle Finger: https://images.emojiterra.com/google/android-oreo/512px/1f595.png
+    - Peace https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Peace_symbol.svg/2048px-Peace_symbol.svg.png
+    - OKAY MEME: https://e7.pngegg.com/pngimages/171/972/png-clipart-saitama-cartoon-one-punch-man-saitama-ok-memes-saitama-ok.png
+    - THE ROCK: https://media.tenor.com/IyweQyb3MhIAAAAi/the-rock-sus.gif
+    - Little Devil: https://www.clipartmax.com/png/full/60-601728_purple-devil-emoji.png
